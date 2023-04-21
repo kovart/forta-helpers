@@ -1,11 +1,12 @@
 export { delay } from './delay';
 export { retry } from './retry';
-export { getCreatedContracts } from './created-contracts';
-export { isBurnAddress } from './burn-address';
-export { normalizeMetadataUri, containsLink, isBase64 } from './ipfs';
 export { providersQueue } from './queue';
+export { isBurnAddress } from './burn-address';
+export { getCreatedContracts } from './created-contracts';
+export { normalizeMetadataUri, containsLink, isBase64 } from './ipfs';
 export { CsvStorage, JsonStorage, exists, rmFile, mkdir } from './storage';
-export { getStorageContractAddresses, getStorageAddresses } from './contract-storage';
+export { getStorageAddresses, getStorageContractAddresses } from './contract-storage';
+export { getOpcodeAddresses, getOpcodeContractAddresses } from './contract-opcodes';
 export {
   TokenStandard,
   identifyTokenInterface,
