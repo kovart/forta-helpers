@@ -14,23 +14,25 @@ function getOpcodes(bytecode: string) {
 export function getOpcodeAddresses(bytecode: string) {
   const opcodes = getOpcodes(bytecode);
 
-  const addresses: string[] = [];
+  const addressSet = new Set<string>();
 
   for (const opcode of opcodes) {
     const str = opcode.pushData?.toString('hex') || '';
     if (str.length === 40) {
       const addr = '0x' + str;
-      addresses.push(addr);
+      addressSet.add(addr.toString());
     }
   }
 
-  return addresses;
+  return [...addressSet].filter(
+    (a) => a !== ethers.constants.AddressZero && a !== '0xffffffffffffffffffffffffffffffffffffffff',
+  );
 }
 
 export async function getOpcodeContractAddresses(
   bytecode: string,
   provider: ethers.providers.BaseProvider,
-  blockNumber?: string | number
+  blockNumber?: string | number,
 ) {
   let addresses: string[] = getOpcodeAddresses(bytecode);
 

@@ -31,7 +31,12 @@ export async function getStorageAddresses(
     addressSet.add(slot.slice(-40));
   }
 
-  return [...addressSet].map((v) => '0x' + v).filter((v) => v !== ethers.constants.AddressZero);
+  return [...addressSet]
+    .map((v) => '0x' + v.toLowerCase())
+    .filter(
+      (v) =>
+        v !== ethers.constants.AddressZero && v !== '0xffffffffffffffffffffffffffffffffffffffff',
+    );
 }
 
 export async function getStorageContractAddresses(
