@@ -4,19 +4,25 @@ const CONTRACT_SLOT_ANALYSIS_DEPTH = 20;
 
 export async function getStorageAddresses(
   address: string | undefined,
-  provider: ethers.providers.StaticJsonRpcProvider,
-  slotNumber = CONTRACT_SLOT_ANALYSIS_DEPTH,
+  provider: ethers.providers.BaseProvider,
+  slotDepth = CONTRACT_SLOT_ANALYSIS_DEPTH,
   blockNumber?: string | number,
 ) {
   if (!address) return [];
 
-  const batchProvider = new ethers.providers.JsonRpcBatchProvider(provider.connection);
+  let slots: string[] = [];
 
-  const slots = await Promise.all(
-    Array.from(Array(slotNumber)).map((_, i) =>
-      batchProvider.getStorageAt(address, i, blockNumber),
-    ),
-  );
+  if (provider instanceof ethers.providers.JsonRpcBatchProvider) {
+    slots = await Promise.all(
+      Array.from(Array(slotDepth)).map((address, i) =>
+        provider.getStorageAt(address, i, blockNumber),
+      ),
+    );
+  } else {
+    for (let i = 0; i < slotDepth; i++) {
+      slots.push(await provider.getStorageAt(address, i, blockNumber));
+    }
+  }
 
   const addressSet = new Set<string>();
   for (const slot of slots) {
@@ -25,26 +31,28 @@ export async function getStorageAddresses(
     addressSet.add(slot.slice(-40));
   }
 
-  return [...addressSet].map((v) => '0x' + v);
+  return [...addressSet].map((v) => '0x' + v).filter((v) => v !== ethers.constants.AddressZero);
 }
 
 export async function getStorageContractAddresses(
   address: string | undefined,
-  provider: ethers.providers.StaticJsonRpcProvider,
+  provider: ethers.providers.BaseProvider,
   slotNumber = CONTRACT_SLOT_ANALYSIS_DEPTH,
   blockNumber?: string | number,
 ) {
   if (!address) return [];
 
-  const addresses = (await getStorageAddresses(address, provider, slotNumber, blockNumber)).filter(
-    (v) => v !== ethers.constants.AddressZero,
-  );
+  const addresses = await getStorageAddresses(address, provider, slotNumber, blockNumber);
 
-  const batchProvider = new ethers.providers.JsonRpcBatchProvider(provider.connection);
+  let codes: string[] = [];
 
-  const codes = await Promise.all(
-    addresses.map((address) => batchProvider.getCode(address, blockNumber)),
-  );
+  if (provider instanceof ethers.providers.JsonRpcBatchProvider) {
+    codes = await Promise.all(addresses.map((address) => provider.getCode(address, blockNumber)));
+  } else {
+    for (const address of addresses) {
+      codes.push(await provider.getCode(address, blockNumber));
+    }
+  }
 
   return addresses.filter((address, i) => codes[i] !== '0x');
 }
