@@ -1,0 +1,27 @@
+{
+  "name": "forta-helpers",
+  "version": "1.0.0",
+  "description": "A set of ready-made solutions to common problems encountered during Forta bot development.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "Artem Kovalchuk",
+  "license": "ISC",
+  "dependencies": {
+    "@fast-csv/format": "^4.3.5",
+    "@fast-csv/parse": "^4.3.6",
+    "async": "^3.2.4",
+    "ethers": "^5.7.2",
+    "forta-agent": "^0.1.26"
+  },
+  "devDependencies": {
+    "@types/async": "^3.2.4",
+    "@typescript-eslint/eslint-plugin": "^5.59.0",
+    "eslint": "^8.38.0",
+    "eslint-config-prettier": "^8.8.0",
+    "prettier": "^2.8.7",
+    "typescript": "^5.0.4"
+  }
+}
