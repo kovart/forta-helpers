@@ -42,7 +42,7 @@ export async function getOpcodeContractAddresses(
     codes = await Promise.all(addresses.map((a) => provider.getCode(a, blockNumber)));
   } else {
     for (const address of addresses) {
-      codes.push(await provider.getCode(address));
+      codes.push(await provider.getCode(address, blockNumber));
     }
   }
 
