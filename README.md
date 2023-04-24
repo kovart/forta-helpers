@@ -1,4 +1,4 @@
-## Forta Recipes
+## Forta Helpers
 
 A set of ready-made recipes to common problems encountered during Forta bot development.
 
