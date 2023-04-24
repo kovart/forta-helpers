@@ -1,6 +1,6 @@
 {
   "name": "forta-helpers",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A set of ready-made solutions to common problems encountered during Forta bot development.",
   "main": "dist/index.js",
   "scripts": {
