@@ -32,11 +32,24 @@ export async function rmFile(path: string) {
   } catch {}
 }
 
-export abstract class BaseFileStorage<P> {
+export interface IStorage<P> {
+  read(): Promise<P | null>;
+  write(item: P): Promise<void>;
+}
+
+export interface IListStorage<P> {
+  append(row: P | P[]): Promise<void>;
+}
+
+export abstract class BaseFileStorage<P> implements IStorage<P> {
   protected constructor(public folderPath: string, public fileName: string) {}
 
   public async delete(): Promise<void> {
     await rmFile(this.filePath);
+  }
+
+  public async exists(filePath: string = this.filePath) {
+    return await exists(filePath);
   }
 
   protected async createFolder() {
@@ -51,127 +64,11 @@ export abstract class BaseFileStorage<P> {
   abstract write(item: P): Promise<void>;
 }
 
-export class CsvStorage<R extends object, W = R> {
-  public readonly filePath: string;
-  public readonly ext = '.csv';
-
-  constructor(
-    public readonly distPath: string,
-    public readonly fileName: string,
-    protected readonly onRead: (row: Stringify<W>) => R,
-    protected readonly onWrite: (row: R) => Textify<W>,
-  ) {
-    this.filePath = path.resolve(distPath, fileName.replace(this.ext, '') + this.ext);
-  }
-
-  public async read(): Promise<R[]> {
-    if (!(await this.exists(this.filePath))) {
-      return [];
-    }
-
-    return new Promise((res, rej) => {
-      const data: R[] = [];
-
-      const readStream = fs.createReadStream(this.filePath, {
-        encoding: 'utf-8',
-      });
-      const csvStream = parse({ headers: true })
-        .on('data', (row) => {
-          data.push(this.onRead(row));
-        })
-        .on('end', () => res(data))
-        .on('error', rej);
-
-      readStream.pipe(csvStream);
-    });
-  }
-
-  public async append(row: R | R[]): Promise<void> {
-    const rows = Array.isArray(row) ? row : [row];
-
-    return new Promise(async (res, rej) => {
-      await this.mkdir();
-
-      const fileExists = await this.exists();
-
-      const writeStream = fs.createWriteStream(this.filePath, {
-        encoding: 'utf-8',
-        flags: 'a',
-      });
-      const csvStream = format({
-        headers: !fileExists,
-        includeEndRowDelimiter: true,
-      });
-      csvStream.pipe(writeStream);
-
-      rows.forEach((row) => csvStream.write(this.onWrite(row)));
-
-      writeStream.on('finish', res);
-      writeStream.on('error', rej);
-
-      csvStream.end();
-    });
-  }
-
-  public async stream(
-    fn: (params: { append: (row: R) => void; end: () => void }) => void,
-  ): Promise<void> {
-    return new Promise(async (res, rej) => {
-      await this.mkdir();
-
-      const fileExists = await this.exists();
-
-      const writeStream = fs.createWriteStream(this.filePath, {
-        encoding: 'utf-8',
-        flags: 'a',
-      });
-
-      const csvStream = format({
-        headers: !fileExists,
-        includeEndRowDelimiter: true,
-      });
-      csvStream.pipe(writeStream);
-
-      writeStream.on('finish', res);
-      writeStream.on('error', rej);
-
-      fn({
-        append: (row) => csvStream.write(this.onWrite(row)),
-        end: () => csvStream.end(),
-      });
-    });
-  }
-
-  public async write(rows: R[]): Promise<void> {
-    return new Promise(async (res, rej) => {
-      await this.mkdir();
-
-      if (await this.exists()) {
-        await this.delete();
-      }
-
-      const writeStream = writeToPath(this.filePath, rows, {
-        headers: true,
-        includeEndRowDelimiter: true,
-        transform: this.onWrite,
-      });
-
-      writeStream.on('finish', res);
-      writeStream.on('error', rej);
-    });
-  }
-
-  protected async mkdir() {
-    await mkdir(this.distPath);
-  }
-
-  public async delete() {
-    await rmFile(this.filePath);
-  }
-
-  public async exists(filePath: string = this.filePath) {
-    return await exists(filePath);
-  }
+export abstract class BaseListFileStorage<P>
+  extends BaseFileStorage<P[]>
+  implements IListStorage<P>
+{
+  public abstract append(row: P | P[]): Promise<void>;
 }
 
 export class JsonStorage<P extends object> extends BaseFileStorage<P> {
@@ -194,5 +91,113 @@ export class JsonStorage<P extends object> extends BaseFileStorage<P> {
       encoding: 'utf-8',
     });
     return JSON.parse(str);
+  }
+}
+
+export class CsvStorage<P extends object> extends BaseListFileStorage<P> {
+  constructor(
+    public readonly folderPath: string,
+    public readonly fileName: string,
+    protected readonly onRead: (row: Stringify<P>) => P,
+    protected readonly onWrite: (row: P) => Textify<P>,
+  ) {
+    super(folderPath, fileName);
+  }
+
+  public async read(): Promise<P[] | null> {
+    if (!(await this.exists(this.filePath))) {
+      return null;
+    }
+
+    return new Promise((res, rej) => {
+      const data: P[] = [];
+
+      const readStream = fs.createReadStream(this.filePath, {
+        encoding: 'utf-8',
+      });
+      const csvStream = parse({ headers: true })
+        .on('data', (row) => {
+          data.push(this.onRead(row));
+        })
+        .on('end', () => res(data))
+        .on('error', rej);
+
+      readStream.pipe(csvStream);
+    });
+  }
+
+  public async write(rows: P[]): Promise<void> {
+    return new Promise(async (res, rej) => {
+      await this.createFolder();
+
+      if (await this.exists()) {
+        await this.delete();
+      }
+
+      const writeStream = writeToPath(this.filePath, rows, {
+        headers: true,
+        includeEndRowDelimiter: true,
+        transform: this.onWrite,
+      });
+
+      writeStream.on('finish', res);
+      writeStream.on('error', rej);
+    });
+  }
+
+  public async append(row: P | P[]): Promise<void> {
+    const rows = Array.isArray(row) ? row : [row];
+
+    return new Promise(async (res, rej) => {
+      await this.createFolder();
+
+      const fileExists = await this.exists();
+
+      const writeStream = fs.createWriteStream(this.filePath, {
+        encoding: 'utf-8',
+        flags: 'a',
+      });
+      const csvStream = format({
+        headers: !fileExists,
+        includeEndRowDelimiter: true,
+      });
+      csvStream.pipe(writeStream);
+
+      rows.forEach((row) => csvStream.write(this.onWrite(row)));
+
+      writeStream.on('finish', res);
+      writeStream.on('error', rej);
+
+      csvStream.end();
+    });
+  }
+}
+
+export class InMemoryStorage<P extends object> implements IStorage<P> {
+  private value: P | null = null;
+
+  async read(): Promise<P | null> {
+    return this.value;
+  }
+
+  async write(item: P): Promise<void> {
+    this.value = item;
+  }
+}
+
+export class InMemoryListStorage<P extends object> implements IListStorage<P> {
+  private list = new Set<P>();
+
+  async read(): Promise<P[] | null> {
+    return this.list.size === 0 ? null : Array.from(this.list);
+  }
+
+  async write(item: P[]): Promise<void> {
+    this.list = new Set(item);
+  }
+
+  async append(row: P[] | P): Promise<void> {
+    const rows = Array.isArray(row) ? row : [row];
+    rows.forEach((row) => this.list.add(row));
   }
 }
