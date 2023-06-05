@@ -4,7 +4,7 @@ A set of ready-made recipes to common problems encountered during Forta bot deve
 
 ## List
 
-### Extract created contracts
+## Extract created contracts
 
 The tool detects all contracts created within the passed transaction event.
 It should be noted that contracts created by other contracts can be detected only
@@ -30,7 +30,7 @@ async function handleTransaction(txEvent: TransactionEvent) {
 }
 ```
 
-### Identify token contract
+## Identify token contract
 
 ```ts
 import { getCreatedContracts, identifyTokenInterface } from 'forta-helpers';
@@ -47,7 +47,7 @@ async function handleTransaction(txEvent: TransactionEvent) {
 }
 ```
 
-### Extract addresses from a contract code
+## Extract addresses from a contract code
 
 ```ts
 import { getOpcodeAddresses, getOpcodeContractAddresses } from 'forta-helpers';
@@ -58,7 +58,7 @@ const allAddresses = getOpcodeAddresses(code);
 const contractAddresses = await getOpcodeContractAddresses(code, provider);
 ```
 
-### Get accessible IPFS URI
+## Get accessible IPFS URI
 
 Supported formats:
 
@@ -81,7 +81,7 @@ if (!isLink) {
 }
 ```
 
-### Parallel execution by multiple providers
+## Parallel execution by multiple providers
 
 This queue allows tasks to be performed concurrently by multiple providers.
 Each task is assigned a unique provider.
@@ -123,7 +123,7 @@ q.push({
 await q.finish();
 ```
 
-### Get addresses from contract storage
+## Get addresses from contract storage
 
 ```ts
 import { getStorageAddresses, getStorageContractAddresses } from 'forta-helpers';
@@ -143,7 +143,7 @@ const contractAddresses = await getStorageContractAddresses(
 );
 ```
 
-### File Storage
+## File Storage
 
 ```ts
 import { JsonStorage } from 'forta-helpers';
@@ -188,7 +188,7 @@ await transactionStorage.write([
 const transactions = await transactionStorage.read();
 ```
 
-### Filter burn-address
+## Filter burn-address
 
 Checks for the presence in the list of known burn-addresses, as well as the frequent repetition of "0" in the address.
 
@@ -204,7 +204,7 @@ if (
 }
 ```
 
-### Retry
+## Retry
 
 ```ts
 import { retry } from 'forta-helpers';
@@ -218,7 +218,7 @@ const balance = await retry(() => provider.getBalance('0xdAC17F958D2ee523a220620
 });
 ```
 
-### Do some work at a given interval
+## Do some work at a given interval
 
 ```ts
 import { createTicker } from 'forta-helpers';
