@@ -50,7 +50,7 @@ async function handleTransaction(txEvent: TransactionEvent) {
 ### Extract addresses from a contract code
 
 ```ts
-import { getOpcodeAddresses, getOpcodeContractAddresses } from 'forta-utils';
+import { getOpcodeAddresses, getOpcodeContractAddresses } from 'forta-helpers';
 
 const provider = new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/eth');
 const code = await provider.getCode('0xdAC17F958D2ee523a2206206994597C13D831ec7');
@@ -71,7 +71,7 @@ Supported formats:
 - https://site.com/test.json#234?a=3
 
 ```ts
-import { containsLink, normalizeMetadataUri } from 'forta-utils';
+import { containsLink, normalizeMetadataUri } from 'forta-helpers';
 
 const uri = '://QmYjtig7VJQ6XsnUjqqJvj7QaMcCAwtrgNdahSiFofrE7o/0.json';
 const isLink = containsLink(uri);
@@ -87,7 +87,7 @@ This queue allows tasks to be performed concurrently by multiple providers.
 Each task is assigned a unique provider.
 
 ```ts
-import { providersQueue } from 'forta-utils';
+import { providersQueue } from 'forta-helpers';
 
 type Task = {
   account: string;
@@ -126,7 +126,7 @@ await q.finish();
 ### Get addresses from contract storage
 
 ```ts
-import { getStorageAddresses, getStorageContractAddresses } from 'forta-utils';
+import { getStorageAddresses, getStorageContractAddresses } from 'forta-helpers';
 
 // Check up to 20 contract variables and extract all the addresses from there
 const allAddresses = await getStorageAddresses(
@@ -146,7 +146,7 @@ const contractAddresses = await getStorageContractAddresses(
 ### File Storage
 
 ```ts
-import { JsonStorage } from 'forta-utils';
+import { JsonStorage } from 'forta-helpers';
 
 type BotState = {
   transactionCount: number;
@@ -164,7 +164,7 @@ const state = await stateStorage.read();
 ```
 
 ```ts
-import { CsvStorage } from 'forta-utils';
+import { CsvStorage } from 'forta-helpers';
 
 type Transaction = {
   hash: string;
@@ -193,7 +193,7 @@ const transactions = await transactionStorage.read();
 Checks for the presence in the list of known burn-addresses, as well as the frequent repetition of "0" in the address.
 
 ```ts
-import { isBurnAddress } from 'forta-utils';
+import { isBurnAddress } from 'forta-helpers';
 
 if (
   isBurnAddress('0xdead000000000000000042069420694206942069') ||
@@ -207,7 +207,7 @@ if (
 ### Retry
 
 ```ts
-import { retry } from 'forta-utils';
+import { retry } from 'forta-helpers';
 
 const provider = new ethers.providers.JsonRpcProvider('https://rpc.ankr.com/eth');
 const balance = await retry(() => provider.getBalance('0xdAC17F958D2ee523a2206206994597C13D831ec7'), {
@@ -221,7 +221,7 @@ const balance = await retry(() => provider.getBalance('0xdAC17F958D2ee523a220620
 ### Do some work at a given interval
 
 ```ts
-import { createTicker } from 'forta-utils';
+import { createTicker } from 'forta-helpers';
 
 const isTimeToSync = createTicker(5 * 60 * 1000);
 
