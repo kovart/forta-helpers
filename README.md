@@ -2,7 +2,15 @@
 
 A set of ready-made recipes to common problems encountered during Forta bot development.
 
-## List
+## Installation
+
+```bash
+$ npm install forta-helpers
+```
+
+## Solutions
+
+Here is a list of example solutions to various problems using this library.
 
 ## Extract created contracts
 
@@ -145,6 +153,8 @@ const contractAddresses = await getStorageContractAddresses(
 
 ## File Storage
 
+### JsonStorage
+
 ```ts
 import { JsonStorage } from 'forta-helpers';
 
@@ -162,6 +172,8 @@ await stateStorage.write({
 
 const state = await stateStorage.read();
 ```
+
+### CsvStorage
 
 ```ts
 import { CsvStorage } from 'forta-helpers';
@@ -186,6 +198,31 @@ await transactionStorage.write([
 ]);
 
 const transactions = await transactionStorage.read();
+```
+
+### InMemoryStorage
+
+This storage type is handy for not having to create a file during the development or testing of the bot.
+
+```ts
+import { InMemoryStorage, JsonStorage } from 'forta-helpers';
+
+type BotState = {
+  transactionCount: number;
+  lastTransactionHash: string;
+};
+
+const storage = isDevelopment
+  ? new InMemoryStorage<BotState>()
+  : new JsonStorage<BotState>('./data', 'state.json');
+  
+await storage.write({
+  transactionCount: 20,
+  lastTransactionHash: '0xHASH',
+});
+
+const state = await storage.read();
+
 ```
 
 ## Filter burn-address
